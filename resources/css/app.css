@@ -11,3 +11,125 @@
 }
 
 
+.ribbon {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 120px;
+  height: 120px;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.ribbon span {
+  position: absolute;
+  display: block;
+  left: -26px;           /* Feintuning der Diagonale */
+  top: 22px;
+  width: 190px;          /* Länge über die Ecke */
+  line-height: 26px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #fff;
+  background: #dc2626;   /* Rot */
+  transform: rotate(45deg);
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  letter-spacing: .5px;
+}
+
+/* kleine "Falt-Enden" */
+.ribbon span::before,
+.ribbon span::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  border-bottom: 6px solid transparent;
+}
+
+.ribbon span::before {
+  left: 0;
+  border-right: 6px solid #991b1b; /* dunkleres Rot für Tiefe */
+}
+
+.ribbon span::after {
+  right: 0;
+  border-left: 6px solid #991b1b;
+}
+
+/* optional: etwas responsive Feintuning */
+@media (min-width: 768px) {
+  .ribbon { width: 140px; height: 140px; }
+  .ribbon span { left: -30px; top: 28px; width: 220px; line-height: 28px; font-size: 13px; }
+}
+
+
+/* Container statt Inline-Styles */
+.tag-badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  z-index: 2;
+}
+
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+
+  /* sattes Pink + leichte Tiefe */
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 1px 3px rgba(0,0,0,.35);
+
+  /* Lesbarkeit auf Fotos */
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  text-shadow: 0 1px 0 rgba(0,0,0,.2);
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tag-badge:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+@media (min-width: 768px) {
+  .tag-badge { font-size: 13px; padding: 5px 12px; }
+}
+
+
+
+.product-thumb .media-box {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: #f7f7f7;
+}
+
+/* Bild sauber einpassen */
+.product-thumb .media-box img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100% !important;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+

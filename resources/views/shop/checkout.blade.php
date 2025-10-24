@@ -4,399 +4,409 @@
 
 @section('content')
 
-    <section class="page-header">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="content">
-                        <h1 class="page-name">Checkout</h1>
-                        <ol class="breadcrumb">
-                            <li><a href="{{ route('home') }}">Home</a></li>
-                            <li class="active">Checkout</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="page-wrapper">
-        <div class="checkout shopping">
-            <div class="container">
-                <div class="row">
-
-                    {{-- LEFT: Kontakt & Abholung --}}
-                    <div class="col-md-8">
-                        <form id="checkout-form" action="{{ route('checkout.store') }}" method="post" class="checkout-form">
-                            @csrf
-
-                            {{-- Fehlermeldungen --}}
-                            @if ($errors->any())
-                                <div class="alert alert-danger">
-                                    <ul class="m-b-0">
-                                        @foreach ($errors->all() as $e)
-                                            <li>{{ $e }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
-
-                            {{-- Kontakt --}}
-                            <div class="contact-form">
-                                <h4 class="widget-title">Kontakt</h4>
-                                <div class="form-group">
-                                    <label for="email">Name <span class="required">*</span></label>
-                                    <input id="name" name="name" type="text" class="form-control" value="{{ old('name') }}"
-                                        required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="email">E-Mail <span class="required">*</span></label>
-                                    <input id="email" name="email" type="email" class="form-control"
-                                        value="{{ old('email') }}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="phone">Telefon <span class="required">*</span></label>
-                                    <input id="phone" name="phone" type="text" class="form-control"
-                                        value="{{ old('phone') }}" required>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="adress">Adresse <span class="required">*</span></label>
-                                    <input id="adress" name="adress" type="text" class="form-control"
-                                        value="{{ old('adress') }}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="tax">Postleitzahl <span class="required">*</span></label>
-                                    <input id="tax" name="tax" type="text" class="form-control"
-                                        value="{{ old('tax') }}" required>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="city">Ort <span class="required">*</span></label>
-                                    <input id="city" name="city" type="text" class="form-control"
-                                        value="{{ old('city') }}" required>
-                                </div>
-
-                                <div class="form-group">
-                                    <textarea name="customer_note" class="form-control" rows="3"
-                                        placeholder="Notiz">{{ old('customer_note') }}</textarea>
-                                </div>
-                            </div>
-
-                           {{-- Abholung --}}
-                            <div class="checkout-form">
-                            <h4 class="widget-title">Abholung</h4>
-
-                            <div class="form-group">
-                                <label for="branch">Filiale <span class="required">*</span></label>
-                                <select id="branch" name="branch_id" class="form-control" required>
-                                    @foreach($branches as $b)
-                                    <option value="{{ $b->id }}">{{ $b->name }} — {{ $b->city }}</option>
-                                    @endforeach
-                                </select>
-                                </div>
-
-                                {{-- Öffnungszeiten der Filiale --}}
-                                <div id="opening-hours" class="panel panel-default" style="display:none;">
-                                <div class="panel-heading"><strong>Öffnungszeiten</strong></div>
-                                <div class="panel-body">
-                                    <ul class="list-unstyled m-b-0" id="opening-hours-list"></ul>
-                                </div>
-                                </div>
-
-                                {{-- Hinweis: frühestes Abholdatum basierend auf Vorlaufzeit --}}
-                                <div id="lead-hint" class="alert alert-info" role="alert" style="display:none;">
-                                <i class="tf-ion-information-circled"></i>
-                                <span class="msg"></span>
-                                </div>
-
-                                <div class="form-group">
-                                <label for="date">Abholdatum <span class="required">*</span></label>
-                                <input id="date" name="date" type="date" class="form-control" required min="{{ now()->toDateString() }}">
-                            </div>
-
-
-                            {{-- Slots-Box wird erst angezeigt, wenn Filiale + Datum gewählt und Slots geladen sind --}}
-                            <div id="slots-box" class="mt-2" style="display:none;">
-                                <label>Zeitfenster wählen <span class="required">*</span></label>
-                                <div id="slots" class="space-y-2"></div>
-
-                                {{-- Alert für Fehler/Hinweise --}}
-                                <div id="slots-alert" class="alert alert-danger alert-common mt-10" role="alert" style="display:none;">
-                                <i class="tf-ion-close-circled"></i>
-                                <span class="mr-5">Hinweis:</span>
-                                <span class="msg"></span>
-                                </div>
-                            </div>
-
-                            <div class="checkbox">
-                                <label>
-                                <input type="checkbox" name="agree" value="1" required {{ old('agree') ? 'checked' : '' }}>
-                                Ich akzeptiere die Datenschutzbestimmungen.
-                                </label>
-                            </div>
-
-                            <div>
-                                <button class="btn btn-main mt-20">Kostenpflichtig bestellen</button>
-                            </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    {{-- RIGHT: Order Summary --}}
-                    <div class="col-md-4">
-                        <div class="product-checkout-details">
-                            <div class="block">
-                                <h4 class="widget-title">Bestellübersicht</h4>
-
-                                @forelse($items as $row)
-                                    @php
-                                        $p = $row['product'];
-                                        $thumb = $p?->getFirstMediaUrl('product_main', 'thumb')
-                                            ?: $p?->getFirstMediaUrl('product_main')
-                                            ?: 'https://via.placeholder.com/80x80';
-                                      @endphp
-                                    <div class="media product-card">
-                                        <a class="pull-left" href="{{ $p ? route('shop.product', $p) : '#' }}">
-                                            <img class="media-object" src="{{ $thumb }}" alt="{{ $p?->name ?? 'Artikel' }}"
-                                                style="width:64px;height:64px;object-fit:cover;">
-                                        </a>
-                                        <div class="media-body">
-                                            <h4 class="media-heading">
-                                                <a href="{{ $p ? route('shop.product', $p) : '#' }}">{{ $p?->name ?? '—' }}</a>
-                                            </h4>
-                                            <p class="price">{{ $row['qty'] }} × {{ number_format($row['unit'], 2, ',', '.') }}
-                                                €</p>
-
-                                            {{-- Optionale Auswahl kurz zeigen --}}
-                                            @if(!empty($row['options']))
-                                                <div class="text-muted" style="font-size:12px;">
-                                                    @foreach($row['options'] as $opt)
-                                                        <div>
-                                                            <strong>{{ $opt['option_name'] ?? 'Option' }}:</strong>
-                                                            @if(!empty($opt['free_text']))
-                                                                {{ $opt['free_text'] }}
-                                                            @else
-                                                                {{ $opt['value_label'] ?? '—' }}
-                                                            @endif
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @empty
-                                    <div class="text-muted">Dein Warenkorb ist leer.</div>
-                                @endforelse
-
-                                <ul class="summary-prices">
-                                    <li>
-                                        <span>Zwischensumme (Netto):</span>
-                                        <span class="price">{{ number_format($subtotal, 2, ',', '.') }} €</span>
-                                    </li>
-                                    <li>
-                                        <span>MwSt gesamt:</span>
-                                        <span class="price">{{ number_format($taxTotal, 2, ',', '.') }} €</span>
-                                    </li>
-                                </ul>
-
-                                <div class="summary-total">
-                                    <span>Gesamt (Brutto)</span>
-                                    <span>{{ number_format($grand, 2, ',', '.') }} €</span>
-                                </div>
-
-                                <div class="text-muted small" style="margin-top:6px;">
-                                    Alle Preise inkl. gesetzl. MwSt.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div> {{-- /.row --}}
-            </div>
-        </div>
+  {{-- Header / Breadcrumb --}}
+  <section class="border-b border-gray-200 bg-white">
+    <div class="mx-auto container px-4 sm:px-6 lg:px-8 py-6">
+      <h1 class="text-2xl font-semibold text-gray-900">Checkout</h1>
+      <nav aria-label="Breadcrumb" class="mt-2 text-sm">
+        <ol class="flex items-center gap-2 text-gray-600">
+          <li><a href="{{ route('home') }}" class="hover:text-gray-900">Home</a></li>
+          <li aria-hidden="true">/</li>
+          <li class="text-gray-900 font-medium">Checkout</li>
+        </ol>
+      </nav>
     </div>
+  </section>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const form      = document.getElementById('checkout-form');
-  const branch    = document.getElementById('branch');
-  const date      = document.getElementById('date');
+  <section class="bg-white">
+    <div class="mx-auto container px-4 sm:px-6 lg:px-8 py-10">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-  const hoursBox  = document.getElementById('opening-hours');
-  const hoursList = document.getElementById('opening-hours-list');
-  const leadHint  = document.getElementById('lead-hint');
-  const leadMsg   = leadHint?.querySelector('.msg');
+        {{-- LEFT: Kontakt & Abholung --}}
+        <div class="lg:col-span-8">
+          <form id="checkout-form" action="{{ route('checkout.store') }}" method="post" class="space-y-6">
+            @csrf
 
-  const slotsBox  = document.getElementById('slots-box');
-  const slots     = document.getElementById('slots');
-  const alertBox  = document.getElementById('slots-alert');
-  const alertMsg  = alertBox?.querySelector('.msg');
+            {{-- Fehlermeldungen --}}
+            @if ($errors->any())
+              <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                <ul class="list-disc pl-5 space-y-1">
+                  @foreach ($errors->all() as $e)
+                    <li>{{ $e }}</li>
+                  @endforeach
+                </ul>
+              </div>
+            @endif
 
-  let requestId = 0;
+            {{-- Kontakt --}}
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
+              <h2 class="text-lg font-semibold text-gray-900">Kontakt</h2>
+              <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="name" class="mb-1 block text-sm font-medium text-gray-900">
+                    Name <span class="text-red-600">*</span>
+                  </label>
+                  <input id="name" name="name" type="text" value="{{ old('name') }}" required
+                         class="block w-full rounded-md p-2 border border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900">
+                </div>
 
-  const WEEKDAY_NAMES = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+                <div>
+                  <label for="email" class="mb-1 block text-sm font-medium text-gray-900">
+                    E-Mail <span class="text-red-600">*</span>
+                  </label>
+                  <input id="email" name="email" type="email" value="{{ old('email') }}" required
+                         class="block w-full rounded-md p-2 border border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900">
+                </div>
 
-  function show(el, v) { if (el) el.style.display = v ? 'block' : 'none'; }
-  function showAlert(msg) { if (!alertBox) return; alertMsg.textContent = msg||'Keine Abholfenster verfügbar.'; show(alertBox, true); }
-  function hideAlert() { if (!alertBox) return; alertMsg.textContent = ''; show(alertBox, false); }
-  function resetSlots(hideBox=false){ hideAlert(); slots.innerHTML=''; if(hideBox) show(slotsBox, false); }
+                <div>
+                  <label for="phone" class="mb-1 block text-sm font-medium text-gray-900">
+                    Telefon <span class="text-red-600">*</span>
+                  </label>
+                  <input id="phone" name="phone" type="text" value="{{ old('phone') }}" required
+                         class="block w-full rounded-md p-2 border border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900">
+                </div>
 
-  function renderOpeningHours(hours) {
-    if (!hoursList) return;
-    hoursList.innerHTML = '';
-    if (!Array.isArray(hours) || hours.length === 0) { show(hoursBox, false); return; }
+                <div>
+                  <label for="adress" class="mb-1 block text-sm font-medium text-gray-900">
+                    Adresse <span class="text-red-600">*</span>
+                  </label>
+                  <input id="adress" name="adress" type="text" value="{{ old('adress') }}" required
+                         class="block w-full rounded-md p-2 border border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900">
+                </div>
 
-    hours.forEach(h => {
-      const li = document.createElement('li');
-      const name = WEEKDAY_NAMES[h.weekday] ?? h.weekday;
-      if (h.is_closed) {
-        li.textContent = `${name}: geschlossen`;
-      } else {
-        li.textContent = `${name}: ${h.opens_at?.substring(0,5)} – ${h.closes_at?.substring(0,5)}`;
-      }
-      hoursList.appendChild(li);
-    });
-    show(hoursBox, true);
-  }
+                <div>
+                  <label for="tax" class="mb-1 block text-sm font-medium text-gray-900">
+                    Postleitzahl <span class="text-red-600">*</span>
+                  </label>
+                  <input id="tax" name="tax" type="text" value="{{ old('tax') }}" required
+                         class="block w-full rounded-md p-2 border border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900">
+                </div>
 
-  function setEarliestDate(earliestISO, leadDays) {
-    if (!date) return;
-    // min setzen (aber min darf nicht in der Vergangenheit liegen)
-    date.min = earliestISO;
-    if (date.value && date.value < earliestISO) {
-      date.value = earliestISO;
-    }
-    if (leadHint && leadMsg) {
-      if ((leadDays ?? 0) > 0) {
-        leadMsg.textContent = `Frühestes Abholdatum: ${new Date(earliestISO+'T00:00:00').toLocaleDateString(undefined, { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' })}.`;
-        show(leadHint, true);
-      } else {
-        show(leadHint, false);
-      }
-    }
-  }
+                <div>
+                  <label for="city" class="mb-1 block text-sm font-medium text-gray-900">
+                    Ort <span class="text-red-600">*</span>
+                  </label>
+                  <input id="city" name="city" type="text" value="{{ old('city') }}" required
+                         class="block w-full rounded-md p-2 border border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900">
+                </div>
 
-  async function loadMeta() {
-    const b = branch.value;
-    if (!b) { show(hoursBox, false); show(leadHint, false); return; }
+                <div class="sm:col-span-2">
+                  <label for="customer_note" class="mb-1 block text-sm font-medium text-gray-900">Notiz</label>
+                  <textarea id="customer_note" name="customer_note" rows="3" placeholder="Notiz"
+                            class="block w-full rounded-md p-2 border border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900">{{ old('customer_note') }}</textarea>
+                </div>
+              </div>
+            </div>
 
-    let resp;
-    try {
-      resp = await fetch('{{ route('cart.pickup.meta') }}', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': '{{ csrf_token() }}',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({ branch_id: b })
+            {{-- Abholung --}}
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
+              <h2 class="text-lg font-semibold text-gray-900">Abholung</h2>
+
+              <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="sm:col-span-2">
+                  <label for="branch" class="mb-1 block text-sm font-medium text-gray-900">
+                    Filiale <span class="text-red-600">*</span>
+                  </label>
+                  <select id="branch" name="branch_id" required
+                          class="block w-full rounded-md p-2 border border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900">
+                    @foreach($branches as $b)
+                      <option value="{{ $b->id }}" @selected(old('branch_id')==$b->id)>
+                        {{ $b->name }} — {{ $b->city }}
+                      </option>
+                    @endforeach
+                  </select>
+                </div>
+
+                {{-- Öffnungszeiten --}}
+                <div id="opening-hours" class="sm:col-span-2 hidden rounded-md border border-gray-200 bg-gray-50 p-4">
+                  <div class="text-sm font-medium text-gray-900">Öffnungszeiten</div>
+                  <ul id="opening-hours-list" class="mt-2 text-sm text-gray-700 space-y-0.5"></ul>
+                </div>
+
+                {{-- Vorlaufzeit-Hinweis --}}
+                <div id="lead-hint" class="sm:col-span-2 hidden rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                  <span class="msg"></span>
+                </div>
+
+                <div>
+                  <label for="date" class="mb-1 block text-sm font-medium text-gray-900">
+                    Abholdatum <span class="text-red-600">*</span>
+                  </label>
+                  <input id="date" name="date" type="date" required min="{{ now()->toDateString() }}"
+                         value="{{ old('date') }}"
+                         class="block w-full rounded-md p-2 border border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900">
+                </div>
+              </div>
+
+              {{-- Slots --}}
+              <div id="slots-box" class="mt-4 hidden">
+                <label class="mb-2 block text-sm font-medium text-gray-900">
+                  Zeitfenster wählen <span class="text-red-600">*</span>
+                </label>
+
+                <div id="slots" class="space-y-2"></div>
+
+                {{-- Alert für Fehler/Hinweise --}}
+                <div id="slots-alert" class="mt-3 hidden rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  <span class="font-medium mr-1">Hinweis:</span>
+                  <span class="msg"></span>
+                </div>
+              </div>
+
+              {{-- Datenschutz --}}
+              <div class="mt-6">
+                <label class="flex items-center gap-2 text-sm text-gray-800">
+                  <input type="checkbox" name="agree" value="1" required {{ old('agree') ? 'checked' : '' }}
+                         class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900">
+                  <span>Ich akzeptiere die Datenschutzbestimmungen.</span>
+                </label>
+              </div>
+
+              <div class="mt-6">
+                <button class="inline-flex items-center rounded-md bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:opacity-90">
+                  Kostenpflichtig bestellen
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {{-- RIGHT: Order Summary --}}
+        <div class="lg:col-span-4">
+          <div class="rounded-xl border border-gray-200 bg-white p-5">
+            <h2 class="text-lg font-semibold text-gray-900">Bestellübersicht</h2>
+
+            <div class="mt-4 divide-y divide-gray-100">
+              @forelse($items as $row)
+                @php
+                  $p = $row['product'];
+                  $thumb = $p?->getFirstMediaUrl('product_main', 'thumb')
+                    ?: $p?->getFirstMediaUrl('product_main')
+                    ?: 'https://via.placeholder.com/80x80';
+                @endphp
+                <div class="py-3 flex gap-3">
+                  <a href="{{ $p ? route('shop.product', $p) : '#' }}"
+                     class="block h-16 w-16 shrink-0 overflow-hidden rounded-md border border-gray-200">
+                    <img src="{{ $thumb }}" alt="{{ $p?->name ?? 'Artikel' }}" class="h-full w-full object-cover">
+                  </a>
+                  <div class="min-w-0 flex-1">
+                    <a href="{{ $p ? route('shop.product', $p) : '#' }}"
+                       class="line-clamp-2 font-medium text-gray-900 hover:underline">
+                      {{ $p?->name ?? '—' }}
+                    </a>
+                    <div class="mt-1 text-sm text-gray-700">
+                      {{ $row['qty'] }} × {{ number_format($row['unit'], 2, ',', '.') }} €
+                    </div>
+
+                    @if(!empty($row['options']))
+                      <div class="mt-1 text-xs text-gray-600 space-y-0.5">
+                        @foreach($row['options'] as $opt)
+                          <div>
+                            <strong>{{ $opt['option_name'] ?? 'Option' }}:</strong>
+                            @if(!empty($opt['free_text']))
+                              {{ $opt['free_text'] }}
+                            @else
+                              {{ $opt['value_label'] ?? '—' }}
+                            @endif
+                          </div>
+                        @endforeach
+                      </div>
+                    @endif
+                  </div>
+                </div>
+              @empty
+                <div class="py-3 text-sm text-gray-600">Dein Warenkorb ist leer.</div>
+              @endforelse
+            </div>
+
+            <dl class="mt-4 space-y-1 text-sm">
+              <div class="flex justify-between">
+                <dt class="text-gray-600">Zwischensumme (Netto)</dt>
+                <dd class="font-medium text-gray-900">{{ number_format($subtotal, 2, ',', '.') }} €</dd>
+              </div>
+              <div class="flex justify-between">
+                <dt class="text-gray-600">MwSt gesamt</dt>
+                <dd class="font-medium text-gray-900">{{ number_format($taxTotal, 2, ',', '.') }} €</dd>
+              </div>
+            </dl>
+
+            <div class="mt-4 border-t border-gray-200 pt-4">
+              <div class="flex items-center justify-between text-base">
+                <span class="font-medium text-gray-900">Gesamt (Brutto)</span>
+                <span class="font-semibold text-gray-900">{{ number_format($grand, 2, ',', '.') }} €</span>
+              </div>
+            </div>
+
+            <p class="mt-3 text-xs text-gray-500">Alle Preise inkl. gesetzl. MwSt.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form      = document.getElementById('checkout-form');
+    const branch    = document.getElementById('branch');
+    const date      = document.getElementById('date');
+
+    const hoursBox  = document.getElementById('opening-hours');
+    const hoursList = document.getElementById('opening-hours-list');
+    const leadHint  = document.getElementById('lead-hint');
+    const leadMsg   = leadHint?.querySelector('.msg');
+
+    const slotsBox  = document.getElementById('slots-box');
+    const slots     = document.getElementById('slots');
+    const alertBox  = document.getElementById('slots-alert');
+    const alertMsg  = alertBox?.querySelector('.msg');
+
+    let requestId = 0;
+    const WEEKDAY_NAMES = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+    // Hilfen (Tailwind: hidden nutzen)
+    function showEl(el, v) { if (!el) return; el.classList.toggle('hidden', !v); }
+    function showAlert(msg) { if (!alertBox) return; alertMsg.textContent = msg||'Keine Abholfenster verfügbar.'; showEl(alertBox, true); }
+    function hideAlert() { if (!alertBox) return; alertMsg.textContent = ''; showEl(alertBox, false); }
+    function resetSlots(hideBox=false){ hideAlert(); if (slots) slots.innerHTML=''; if(hideBox) showEl(slotsBox, false); }
+
+    function renderOpeningHours(hours) {
+      if (!hoursList) return;
+      hoursList.innerHTML = '';
+      if (!Array.isArray(hours) || hours.length === 0) { showEl(hoursBox, false); return; }
+
+      hours.forEach(h => {
+        const li = document.createElement('li');
+        const name = WEEKDAY_NAMES[h.weekday] ?? h.weekday;
+        li.textContent = h.is_closed
+          ? `${name}: geschlossen`
+          : `${name}: ${(h.opens_at||'').substring(0,5)} – ${(h.closes_at||'').substring(0,5)}`;
+        hoursList.appendChild(li);
       });
-    } catch {
-      // Meta nicht kritisch – UI unberührt lassen
-      return;
+      showEl(hoursBox, true);
     }
-    if (!resp.ok) return;
 
-    try {
-      const data = await resp.json();
-      renderOpeningHours(data.opening_hours);
-      setEarliestDate(data.earliest_date, data.lead_days);
-    } catch {}
-  }
+    function setEarliestDate(earliestISO, leadDays) {
+      if (!date) return;
+      date.min = earliestISO;
+      if (date.value && date.value < earliestISO) date.value = earliestISO;
 
-  async function loadSlots() {
-    const currentId = ++requestId;
-    const b = branch.value;
-    const d = date.value;
-    if (!b || !d) { resetSlots(true); return; }
+      if (leadHint && leadMsg) {
+        if ((leadDays ?? 0) > 0) {
+          const d = new Date(earliestISO+'T00:00:00');
+          leadMsg.textContent =
+            `Frühestes Abholdatum: ${d.toLocaleDateString(undefined, { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' })}.`;
+          showEl(leadHint, true);
+        } else {
+          showEl(leadHint, false);
+        }
+      }
+    }
 
-    show(slotsBox, true);
-    resetSlots(false);
+    async function loadMeta() {
+      const b = branch.value;
+      if (!b) { showEl(hoursBox, false); showEl(leadHint, false); return; }
 
-    let resp;
-    try {
-      resp = await fetch('{{ route('cart.pickup.windows') }}', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json' },
-        body: JSON.stringify({ branch_id: b, date: d })
-      });
-    } catch {
+      try {
+        const resp = await fetch('{{ route('cart.pickup.meta') }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+          body: JSON.stringify({ branch_id: b })
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        renderOpeningHours(data.opening_hours);
+        setEarliestDate(data.earliest_date, data.lead_days);
+      } catch { /* non-critical */ }
+    }
+
+    async function loadSlots() {
+      const currentId = ++requestId;
+      const b = branch.value;
+      const d = date.value;
+      if (!b || !d) { resetSlots(true); return; }
+
+      showEl(slotsBox, true);
+      resetSlots(false);
+
+      let resp;
+      try {
+        resp = await fetch('{{ route('cart.pickup.windows') }}', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json' },
+          body: JSON.stringify({ branch_id: b, date: d })
+        });
+      } catch {
+        if (currentId !== requestId) return;
+        showAlert('Verbindungsfehler beim Laden der Abholfenster.');
+        return;
+      }
       if (currentId !== requestId) return;
-      showAlert('Verbindungsfehler beim Laden der Abholfenster.');
-      return;
-    }
-    if (currentId !== requestId) return;
 
-    if (!resp.ok) {
-      let msg = 'Keine Abholfenster verfügbar.';
-      try { const err = await resp.json(); if (err?.message) msg = err.message; } catch {}
-      showAlert(msg);
-      return;
-    }
-
-    let data;
-    try { data = await resp.json(); } catch { showAlert('Unerwartete Serverantwort.'); return; }
-
-    const windows = Array.isArray(data.windows) ? data.windows : [];
-    if (windows.length === 0) { showAlert('Für diesen Tag sind keine Abholzeiten verfügbar.'); return; }
-
-    hideAlert();
-    const oldVal = @json(old('window_start'));
-    let anySelected = false;
-
-    windows.forEach((w, idx) => {
-      const id   = 'slot_' + idx;
-      const wrap = document.createElement('div');
-      wrap.className = 'radio';
-
-      const label = document.createElement('label');
-      label.setAttribute('for', id);
-
-      const input = document.createElement('input');
-      input.type  = 'radio';
-      input.name  = 'window_start';
-      input.id    = id;
-      input.value = w.start; // "H:i:s"
-
-      if (!anySelected && oldVal && oldVal === w.start) {
-        input.checked = true; anySelected = true;
+      if (!resp.ok) {
+        let msg = 'Keine Abholfenster verfügbar.';
+        try { const err = await resp.json(); if (err?.message) msg = err.message; } catch {}
+        showAlert(msg);
+        return;
       }
 
-      label.appendChild(input);
-      label.appendChild(document.createTextNode(' ' + (w.label || w.start)));
-      wrap.appendChild(label);
-      slots.appendChild(wrap);
+      let data;
+      try { data = await resp.json(); } catch { showAlert('Unerwartete Serverantwort.'); return; }
+
+      const windows = Array.isArray(data.windows) ? data.windows : [];
+      if (windows.length === 0) { showAlert('Für diesen Tag sind keine Abholzeiten verfügbar.'); return; }
+
+      hideAlert();
+      const oldVal = @json(old('window_start'));
+      let anySelected = false;
+
+      windows.forEach((w, idx) => {
+        const id = 'slot_' + idx;
+
+        const label = document.createElement('label');
+        label.setAttribute('for', id);
+        label.className = 'flex items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 hover:bg-gray-50';
+
+        const input = document.createElement('input');
+        input.type  = 'radio';
+        input.name  = 'window_start';
+        input.id    = id;
+        input.value = w.start; // "H:i:s"
+        input.className = 'h-4 w-4 border-gray-300 text-gray-900 focus:ring-gray-900';
+
+        if (!anySelected && oldVal && oldVal === w.start) { input.checked = true; anySelected = true; }
+
+        const span = document.createElement('span');
+        span.textContent = w.label || w.start;
+
+        label.appendChild(input);
+        label.appendChild(span);
+        slots.appendChild(label);
+      });
+
+      if (!anySelected) {
+        const first = slots.querySelector('input[type=radio]');
+        if (first) first.checked = true;
+      }
+    }
+
+    // Guards & Events
+    form.addEventListener('submit', (e) => {
+      const chosen = form.querySelector('input[name="window_start"]:checked');
+      if (!chosen) {
+        e.preventDefault();
+        if (branch.value && date.value) showEl(slotsBox, true);
+        showAlert('Bitte ein Abholfenster auswählen, bevor Sie fortfahren.');
+        (form.querySelector('#slots input[type=radio]') || date).focus();
+      }
     });
 
-    if (!anySelected) {
-      const first = slots.querySelector('input[type=radio]');
-      if (first) first.checked = true;
-    }
-  }
+    branch.addEventListener('change', async () => { await loadMeta(); await loadSlots(); });
+    date.addEventListener('change', loadSlots);
 
-  // Guards & Events
-  form.addEventListener('submit', (e) => {
-    const chosen = form.querySelector('input[name="window_start"]:checked');
-    if (!chosen) {
-      e.preventDefault();
-      if (branch.value && date.value) show(slotsBox, true);
-      showAlert('Bitte ein Abholfenster auswählen, bevor Sie fortfahren.');
-      (form.querySelector('#slots input[type=radio]') || date).focus();
-    }
+    // Initial
+    (async () => { await loadMeta(); })();
   });
-
-  branch.addEventListener('change', async () => { await loadMeta(); await loadSlots(); });
-  date.addEventListener('change', loadSlots);
-
-  // Initial
-  (async () => { await loadMeta(); })();
-});
-</script>
-
-
-
-
-
+  </script>
 
 @endsection
