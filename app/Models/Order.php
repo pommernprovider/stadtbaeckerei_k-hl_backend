@@ -53,4 +53,17 @@ class Order extends Model
         $end   = $this->pickup_end_at?->format('H:i');
         return ($start && $end) ? "{$start}–{$end}" : ($start ?? '-');
     }
+
+    public function getTotalGrossAttribute(): ?string
+    {
+        return $this->grand_total;
+    }
+
+
+    public function formattedTotal(string $attr = 'grand_total'): string
+    {
+        $value = $this->{$attr};
+        $f = $value !== null ? (float) $value : 0.0;
+        return number_format($f, 2, ',', '.') . ' €';
+    }
 }

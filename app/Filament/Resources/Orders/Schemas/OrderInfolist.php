@@ -68,7 +68,7 @@ class OrderInfolist
                             ->columns(3),
 
                     ])
-                    ->columnSpan(['lg' => fn(?Order $record) => $record === null ? 3 : 2]),
+                    ->columnSpan(['lg' => fn(?Order $record) => $record === null ? 4 : 3]),
                 Section::make()
                     ->schema([
                         TextEntry::make('created_at')
@@ -84,6 +84,6 @@ class OrderInfolist
                     ->columnSpan(['lg' => 1])
                     ->hidden(fn(?Order $record) => $record === null),
             ])
-            ->columns(3);
+            ->columns(4);
     }
 }

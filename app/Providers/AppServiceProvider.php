@@ -2,13 +2,15 @@
 
 namespace App\Providers;
 
-use App\Models\Category;
+use App\Models\Order;
+use App\Observers\OrderObserver;
 use Illuminate\Support\ServiceProvider;
 
 use Illuminate\Support\Facades\View;
 use App\Models\Product;
 use App\Observers\ProductObserver;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Notification;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -82,5 +84,6 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Product::observe(ProductObserver::class);
+        Order::observe(OrderObserver::class);
     }
 }
