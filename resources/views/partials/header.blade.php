@@ -5,13 +5,13 @@
 @endphp
 
 <header x-data="{ open:false, prod:false, cart:false }" class="sticky top-0 z-50 border-b border-gray-200 bg-white">
-    <div class="mx-auto container px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto container px-4 sm:px-6 lg:px-8 py-2">
         <div class="flex h-16 items-center justify-between">
             {{-- Left: Logo --}}
             <a href="{{ route('home') }}" class="flex items-center gap-2 hover:opacity-90">
-                @php $logo = null; /* z.B. asset('images/logo.svg') */ @endphp
+                @php $logo = asset('/logo.png'); /* z.B. asset('images/logo.svg') */ @endphp
                 @if($logo)
-                    <img src="{{ $logo }}" alt="Stadtbäckerei Kühl" class="h-8 w-auto">
+                    <img src="{{ $logo }}" alt="Stadtbäckerei Kühl" class="h-24 w-auto">
                 @else
                     <span class="text-lg font-semibold tracking-wide text-gray-900">Stadtbäckerei Kühl</span>
                 @endif

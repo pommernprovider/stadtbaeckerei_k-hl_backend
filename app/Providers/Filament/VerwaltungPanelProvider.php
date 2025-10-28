@@ -34,6 +34,7 @@ class VerwaltungPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Rose,
             ])
+            ->favicon(asset('logo.png'))
             ->maxContentWidth('7xl')
             ->unsavedChangesAlerts()
             ->databaseNotifications()

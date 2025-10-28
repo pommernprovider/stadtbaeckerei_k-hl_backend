@@ -22,7 +22,7 @@ use UnitEnum;
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
-
+    protected static ?string $recordTitleAttribute = 'name';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCake;
     protected static string | UnitEnum | null $navigationGroup = 'Produkte';
     protected static ?string $modelLabel = 'Produkt';
@@ -65,5 +65,10 @@ class ProductResource extends Resource
             'view' => ViewProduct::route('/{record}'),
             'edit' => EditProduct::route('/{record}/edit'),
         ];
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'slug', 'description', 'ingredients', 'allergens', 'notes_required', 'base_price'];
     }
 }

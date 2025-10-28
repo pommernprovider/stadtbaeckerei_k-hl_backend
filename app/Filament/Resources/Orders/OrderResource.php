@@ -65,4 +65,9 @@ class OrderResource extends Resource
             'edit' => EditOrder::route('/{record}/edit'),
         ];
     }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['order_number', 'pickup_at', 'subtotal', 'grand_total', 'customer_name', 'customer_email', 'customer_phone', 'customer_adress', 'customer_tax', 'customer_city', 'customer_note'];
+    }
 }

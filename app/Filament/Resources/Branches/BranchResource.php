@@ -64,4 +64,9 @@ class BranchResource extends Resource
             'edit' => EditBranch::route('/{record}/edit'),
         ];
     }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'street', 'zip', 'city'];
+    }
 }

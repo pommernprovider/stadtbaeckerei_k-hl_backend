@@ -39,12 +39,6 @@ class OrderConfirmationCustomerNotification extends Notification
     {
         return (new MailMessage)
             ->subject('Bestellbestätigung #' . $this->order->order_number)
-            ->greeting('Hallo ' . ($this->order->customer_name ?? ''))
-            ->line('Vielen Dank für Ihre Bestellung!')
-            ->line('Bestellnummer: ' . $this->order->order_number)
-            ->line('Abholung: ' . optional($this->order->pickup_at)->format('d.m.Y H:i'))
-            ->line('Summe: ' . number_format($this->order->total_gross, 2, ',', '.') . ' €')
-            ->line('Abholort: ' . optional($this->order->branch)->name)
-            ->salutation('Ihre Stadtbäckerei KÜHL');
+            ->markdown('mail.orders.confirmation', ['order' => $this->order->loadMissing(['items.options', 'branch'])]);
     }
 }

@@ -34,7 +34,7 @@
                         <div>
                             <p class="text-gray-800">Dein Warenkorb ist leer.</p>
                             <div class="mt-4">
-                                <a href="{{ route('shop.products') }}"
+                                <a href="{{ route('home') }}"
                                     class="inline-flex items-center rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90">
                                     Weiter einkaufen
                                 </a>
@@ -67,7 +67,7 @@
                                     <tbody class="divide-y divide-gray-100">
                                         @foreach($items as $row)
                                             @php
-                                                /** @var \App\Models\Shop\Product|null $product */
+                                                /** @var \App\Models\Product|null $product */
                                                 $product = $row['product'];
                                                 $img = $product?->getFirstMediaUrl('product_main', 'thumb')
                                                     ?: $product?->getFirstMediaUrl('product_main')
@@ -117,7 +117,7 @@
                                                 {{-- Menge --}}
                                                 <td class="px-4 py-4">
                                                     <form action="{{ route('cart.update') }}" method="post"
-                                                        class="mx-auto flex w-full max-w-[9.5rem] items-center justify-center gap-2">
+                                                        class="mx-auto flex w-full max-w-38 items-center justify-center gap-2">
                                                         @csrf
                                                         <input type="hidden" name="line" value="{{ $row['line'] }}">
                                                         <input type="number" name="qty" min="1" value="{{ $row['qty'] }}"
