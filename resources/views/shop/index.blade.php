@@ -26,14 +26,14 @@
                         <a href="{{ route('shop.products', $c) }}"
                             class="group relative block overflow-hidden rounded-2xl border border-gray-200 shadow-sm hover:shadow transition">
                             {{-- großes Banner (21:9) --}}
-                            <div class="aspect-[21/9] w-full bg-gray-100">
+                            <div class="aspect-21/9 w-full bg-gray-100">
                                 <img src="{{ $img }}" alt="{{ $c->name }}"
                                     class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]">
                             </div>
 
                             {{-- dunkler Verlauf für Lesbarkeit --}}
                             <div
-                                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
+                                class="pointer-events-none absolute inset-0 bg-linear-to-t from-black/60 via-black/30 to-transparent">
                             </div>
 
                             {{-- Text & CTA unten links --}}
@@ -81,7 +81,7 @@
                         <div class="group">
                             {{-- Bild (alleiniger „Card“-Look) --}}
                             <a href="{{ route('shop.product', $p) }}" class="block overflow-hidden rounded-xl bg-gray-100">
-                                <div class="aspect-[4/3] w-full">
+                                <div class="aspect-4/3 w-full">
                                     <img src="{{ $img }}" alt="{{ $p->name }}" loading="lazy" decoding="async"
                                         class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]">
                                 </div>

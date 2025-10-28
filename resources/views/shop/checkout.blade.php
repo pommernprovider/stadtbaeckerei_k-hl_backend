@@ -111,7 +111,7 @@
                           class="block w-full rounded-md p-2 border border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900">
                     @foreach($branches as $b)
                       <option value="{{ $b->id }}" @selected(old('branch_id')==$b->id)>
-                        {{ $b->name }} — {{ $b->city }}
+                        {{ $b->name }} — {{ $b->street }}
                       </option>
                     @endforeach
                   </select>

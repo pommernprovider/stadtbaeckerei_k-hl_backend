@@ -56,7 +56,7 @@
                             <div class="relative">
                                 {{-- Bild --}}
                                 <a href="{{ route('shop.product', $p) }}" class="block">
-                                    <div class="aspect-[4/3] w-full overflow-hidden bg-gray-100">
+                                    <div class="aspect-4/3 w-full overflow-hidden bg-gray-100">
                                         <img src="{{ $img }}" alt="{{ $p->name }}"
                                             class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
                                             loading="lazy" decoding="async">

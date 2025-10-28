@@ -39,7 +39,7 @@
 
                         <a href="{{ route('shop.products', $c) }}"
                             class="group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow transition">
-                            <div class="aspect-[4/3] w-full overflow-hidden bg-gray-100">
+                            <div class="aspect-4/3 w-full overflow-hidden bg-gray-100">
                                 <img src="{{ $img }}" alt="{{ $c->name }}"
                                     class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]">
                             </div>

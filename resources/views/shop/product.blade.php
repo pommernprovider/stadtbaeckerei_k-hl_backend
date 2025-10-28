@@ -47,7 +47,7 @@
             x-on:keydown.arrow-right.window="next()"
             class="space-y-3"
             >
-        <div x-ref="stage" class="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-gray-100" x-cloak>
+        <div x-ref="stage" class="relative aspect-4/3 w-full overflow-hidden rounded-xl bg-gray-100" x-cloak>
             <template x-for="(src, i) in urls" :key="i">
             <img x-show="index===i" x-transition.opacity
                 :src="src" alt="{{ $product->name }}"

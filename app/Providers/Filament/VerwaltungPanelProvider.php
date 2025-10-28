@@ -50,7 +50,7 @@ class VerwaltungPanelProvider extends PanelProvider
                 // AccountWidget::class,
                 // FilamentInfoWidget::class,
             ])
-            ->resourceEditPageRedirect('index')
+            // ->resourceEditPageRedirect('index')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
