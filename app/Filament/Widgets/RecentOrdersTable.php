@@ -2,10 +2,9 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\OrderStatus;
 use App\Filament\Resources\Orders\OrderResource;
-use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Models\Order;
-use Closure;
 use Filament\Actions\Action;
 use Filament\Tables;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -41,15 +40,19 @@ class RecentOrdersTable extends BaseWidget
 
             Tables\Columns\TextColumn::make('pickup_at')
                 ->label('Abholung')
-                ->dateTime('dd.MM.y HH:mm'),
+                ->dateTime('d.m.Y'),
 
-            Tables\Columns\BadgeColumn::make('status')
+            Tables\Columns\TextColumn::make('status')
                 ->label('Status')
-                ->colors([
-                    'success' => ['completed', 'abgeschlossen'],
-                    'danger'  => ['cancelled', 'storniert'],
-                    'warning' => ['pending', 'in_bearbeitung', 'offen'],
-                ]),
+                ->badge()
+                ->formatStateUsing(function ($state) {
+                    $enum = $state instanceof OrderStatus ? $state : OrderStatus::from($state);
+                    return $enum->label();
+                })
+                ->color(function ($state) {
+                    $enum = $state instanceof OrderStatus ? $state : OrderStatus::from($state);
+                    return $enum->getColor();
+                }),
 
             Tables\Columns\TextColumn::make('grand_total')
                 ->label('Summe')
