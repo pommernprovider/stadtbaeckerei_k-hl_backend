@@ -108,7 +108,7 @@
                         <x-heroicon-o-shopping-cart class="h-5 w-5" />
                         @if($cartCount > 0)
                             <span
-                                class="absolute -right-1 -top-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-semibold text-white">
+                                class="absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-semibold text-white">
                                 {{ $cartCount }}
                             </span>
                         @endif
@@ -116,7 +116,7 @@
 
                     {{-- Cart Dropdown --}}
                     <div x-cloak x-show="cart" x-transition.origin.top.right @click.outside="cart=false"
-                        class="absolute right-0 mt-2 w-[22rem] rounded-lg border border-gray-200 bg-white shadow-2xl">
+                        class="absolute right-0 mt-2 w-88 rounded-lg border border-gray-200 bg-white shadow-2xl">
                         @if(empty($miniCart['items']))
                             <div class="p-4 text-center text-sm text-gray-600">Dein Warenkorb ist leer.</div>
                         @else
@@ -124,9 +124,8 @@
                                 @foreach($miniCart['items'] as $it)
                                     <a href="{{ $it['url'] ?? '#' }}" class="flex gap-3 p-3 hover:bg-gray-50">
                                         @if(!empty($it['img']))
-                                            <img src="{{ $it['img'] }}" alt="thumb"
-                                                class="h-14 w-14 flex-shrink-0 rounded object-cover" loading="lazy"
-                                                decoding="async">
+                                            <img src="{{ $it['img'] }}" alt="thumb" class="h-14 w-14 shrink-0 rounded object-cover"
+                                                loading="lazy" decoding="async">
                                         @endif
                                         <div class="min-w-0 flex-1">
                                             <div class="truncate text-sm font-medium text-gray-900">
