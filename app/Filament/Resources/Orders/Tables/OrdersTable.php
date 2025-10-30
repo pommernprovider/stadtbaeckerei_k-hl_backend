@@ -24,7 +24,7 @@ class OrdersTable
                 TextColumn::make('order_number')->label('Nr.')->searchable()->copyable(),
                 TextColumn::make('customer_name')->label('Kunde')->searchable(),
                 TextColumn::make('customer_email')->label('E-Mail')->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('branch.name')->label('Filiale')->sortable()->searchable(),
+                TextColumn::make('branch.number')->label('Filiale')->sortable()->searchable(),
                 TextColumn::make('pickup_at')->label('Abholdatum')->date('d.m.Y')->sortable(),
                 TextColumn::make('pickup_window_text')->label('Fenster'),
 

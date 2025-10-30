@@ -35,9 +35,29 @@ class AdminOrderNew extends Mailable
      */
     public function content(): Content
     {
+        $order = $this->order->loadMissing([
+            'branch',
+            'items.options',   // order_items + order_item_options
+        ]);
+
+        // Labels für Abholfenster
+        $pickupDate   = optional($order->pickup_at)?->format('d.m.Y');
+        $pickupWindow = $order->pickup_window_label
+            ?: trim(($order->pickup_at?->format('H:i') ?? '') . ($order->pickup_end_at ? '–' . $order->pickup_end_at->format('H:i') : ''))
+            ?: '–';
+
         return new Content(
             markdown: 'mail.orders.admin_new',
-            with: ['order' => $this->order->loadMissing(['branch'])],
+            with: [
+                'order'         => $order,
+                'pickup_date'   => $pickupDate,
+                'pickup_window' => $pickupWindow,
+                // Summen gemäß Migration/Spaltennamen
+                'subtotal'      => (float) $order->subtotal,
+                'tax_total'     => (float) $order->tax_total,
+                'grand_total'   => (float) $order->grand_total,
+                'currency'      => $order->currency ?? 'EUR',
+            ],
         );
     }
 

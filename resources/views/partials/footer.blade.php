@@ -70,14 +70,11 @@
                         @if (Route::has('impressum'))
                             <li><a href="{{ route('impressum') }}" class="hover:text-gray-900">Impressum</a></li>
                         @endif
-                        @if (Route::has('privacy'))
-                            <li><a href="{{ route('privacy') }}" class="hover:text-gray-900">Datenschutz</a></li>
+                        @if (Route::has('datenschutz'))
+                            <li><a href="{{ route('datenschutz') }}" class="hover:text-gray-900">Datenschutz</a></li>
                         @endif
-
-                        {{-- Fallback, falls Routen noch nicht existieren --}}
-                        @if (!Route::has('impressum') && !Route::has('privacy'))
-                            <li><a href="{{ route('home') }}" class="hover:text-gray-900">Impressum &amp; Datenschutz</a>
-                            </li>
+                        @if (Route::has('agb'))
+                            <li><a href="{{ route('agb') }}" class="hover:text-gray-900">AGB's</a></li>
                         @endif
                     </ul>
                 </nav>

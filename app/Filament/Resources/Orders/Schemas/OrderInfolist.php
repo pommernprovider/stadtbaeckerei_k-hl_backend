@@ -38,7 +38,7 @@ class OrderInfolist
                                         return $enum->getColor();
                                     }),
 
-                                TextEntry::make('branch.name')->label('Filiale'),
+                                TextEntry::make('branch.number')->label('Filiale'),
                                 TextEntry::make('pickup_at')->label('Abholdatum')->date('d.m.Y'),
                                 TextEntry::make('pickup_window_text')->label('Fenster'),
                             ])

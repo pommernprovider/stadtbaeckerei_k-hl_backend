@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('branches', function (Blueprint $table) {
             $table->id();
+            $table->integer('number')->unique();
             $table->string('name');
             $table->string('street')->nullable();
             $table->string('zip', 15)->nullable();

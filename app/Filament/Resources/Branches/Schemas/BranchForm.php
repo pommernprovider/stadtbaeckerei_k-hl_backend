@@ -26,11 +26,14 @@ class BranchForm
                             ->collapsible()
                             ->columns(2)
                             ->schema([
+                                TextInput::make('number')
+                                    ->label('Filialnummer')
+                                    ->required(),
                                 TextInput::make('name')
                                     ->label('Name')
                                     ->required()
                                     ->maxLength(255)
-                                    ->columnSpan(2), // über beide Spalten
+                                    ->columnSpan(2),
 
                                 SpatieMediaLibraryFileUpload::make('branch_images')
                                     ->label('Filialbild')

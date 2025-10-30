@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
@@ -65,5 +66,20 @@ class Order extends Model
         $value = $this->{$attr};
         $f = $value !== null ? (float) $value : 0.0;
         return number_format($f, 2, ',', '.') . ' €';
+    }
+
+    public static function generateOrderNumber(?int $branchNumber, ?\DateTimeInterface $when = null, string $prefix = 'SBK'): string
+    {
+        $date  = ($when ? \Carbon\Carbon::parse($when) : now())
+            ->timezone(config('app.timezone'))
+            ->format('Ymd'); // 20251030
+
+        // Branch-Teil: 4-stellig pad, bei null -> '0000'
+        $b     = str_pad((string) ($branchNumber ?? 0), 4, '0', STR_PAD_LEFT);
+
+        // 6 Zeichen aus ULID (Crockford Base32, keine I L O U)
+        $short = substr((string) Str::ulid(), -6);
+
+        return "{$prefix}-{$b}-{$date}-{$short}";
     }
 }

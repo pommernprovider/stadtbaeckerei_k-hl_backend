@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CartWebController;
 use App\Http\Controllers\CheckoutWebController;
+use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\PickupController;
 
 Route::get('/', [CatalogController::class, 'home'])->name('home'); // ← NEU: echte Startseite
@@ -28,3 +29,10 @@ Route::get('/checkout', [CheckoutWebController::class, 'show'])->name('checkout.
 Route::post('/checkout', [CheckoutWebController::class, 'store'])->name('checkout.store');
 
 Route::get('/thanks/{order}', [CheckoutWebController::class, 'thanks'])->name('checkout.thanks');
+
+
+//Routen für Rechtliches
+Route::get('/impressum',  [LegalPageController::class, 'impressum'])->name('impressum');
+Route::get('/datenschutz', [LegalPageController::class, 'datenschutz'])->name('datenschutz');
+Route::get('/agb',        [LegalPageController::class, 'agb'])->name('agb');
+Route::get('/widerruf',   [LegalPageController::class, 'widerruf'])->name('widerruf');

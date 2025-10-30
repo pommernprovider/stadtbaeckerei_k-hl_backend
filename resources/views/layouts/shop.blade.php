@@ -2,23 +2,31 @@
 <html lang="de">
 
 <head>
-
-    <!-- Basic Page Needs
-  ================================================== -->
     <meta charset="utf-8">
-    <title>Stadtbäckerei Kühl</title>
+    <title>{{ $metaTitle ?? $seoDefaults->default_meta_title ?? 'Stadtbäckerei Kühl' }}</title>
 
-    <!-- Mobile Specific Metas
-  ================================================== -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="description" content="">
+    <meta name="description" content="{{ $metaDescription ?? $seoDefaults->default_meta_description ?? '' }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-
-    <!-- theme meta -->
     <meta name="theme-name" content="aviato" />
 
-    <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
+    {{-- Dynamisches Favicon --}}
+    @if(!empty($favicon32))
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ $favicon32 }}">
+    @endif
+    @if(!empty($favicon180))
+        <link rel="apple-touch-icon" sizes="180x180" href="{{ $favicon180 }}">
+    @endif
+
+    {{-- OG / Social --}}
+    @if(!empty($seoOgImage))
+        <meta property="og:image" content="{{ $seoOgImage }}">
+    @endif
+    @if(!empty($seoDefaults->meta_tags))
+        @foreach($seoDefaults->meta_tags as $name => $value)
+            <meta name="{{ $name }}" content="{{ $value }}">
+        @endforeach
+    @endif
 
     @vite('resources/css/app.css')
 </head>

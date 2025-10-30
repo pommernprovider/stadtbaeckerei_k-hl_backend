@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\BrandSetting;
+use App\Models\LegalSetting;
 use App\Models\Order;
 use App\Observers\OrderObserver;
 use Illuminate\Support\ServiceProvider;
 
 use Illuminate\Support\Facades\View;
 use App\Models\Product;
+use App\Models\SeoSetting;
 use App\Observers\ProductObserver;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
@@ -85,5 +88,9 @@ class AppServiceProvider extends ServiceProvider
 
         Product::observe(ProductObserver::class);
         Order::observe(OrderObserver::class);
+
+        BrandSetting::saved(fn() => cache()->forget('branding_settings'));
+        LegalSetting::saved(fn() => cache()->forget('legal_settings'));
+        SeoSetting::saved(fn() => cache()->forget('seo_settings'));
     }
 }

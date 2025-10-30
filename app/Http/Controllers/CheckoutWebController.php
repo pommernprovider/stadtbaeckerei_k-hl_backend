@@ -148,11 +148,14 @@ class CheckoutWebController extends Controller
             ];
         }
 
+        $branchNumber = (int) $branch->number; // z.B. 9091
+        $number = Order::generateOrderNumber($branchNumber, $windowStart);
+
         // 7) Persist
-        $order = DB::transaction(function () use ($data, $branch, $windowStart, $end, $label, $subtotal, $tax, $grand, $lines) {
+        $order = DB::transaction(function () use ($data, $number, $branch, $windowStart, $end, $label, $subtotal, $tax, $grand, $lines) {
             $order = Order::create([
                 'id'                 => (string) Str::ulid(),
-                'order_number'       => (string) Str::ulid(),
+                'order_number'       => $number,
                 'status'             => 'pending',
                 'branch_id'          => $branch->id,
                 'pickup_at'          => $windowStart->toDateTimeString(),

@@ -22,6 +22,10 @@ class BranchesTable
                     ->conversion('thumb')
                     ->circular()
                     ->toggleable(),
+                TextColumn::make('number')
+                    ->label('Filialnummer')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('name')
                     ->label('Bezeichnung')
                     ->searchable(),
