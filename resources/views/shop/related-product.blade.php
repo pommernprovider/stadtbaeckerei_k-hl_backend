@@ -26,7 +26,7 @@
             {{-- Bild + Badges + Overlay (die "Karte") --}}
             <div class="relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition group-hover:shadow">
                 <a href="{{ route('shop.product', $p) }}" class="block">
-                <div class="aspect-[4/3] w-full overflow-hidden bg-gray-100">
+                <div class="aspect-4/3 w-full overflow-hidden bg-gray-100">
                     <img
                     src="{{ $img }}"
                     alt="{{ $p->name }}"
@@ -86,7 +86,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                    <div class="aspect-[4/3] w-full overflow-hidden rounded bg-gray-100">
+                    <div class="aspect-4/3 w-full overflow-hidden rounded bg-gray-100">
                         <img src="{{ $img }}" alt="{{ $p->name }}" class="h-full w-full object-cover">
                     </div>
                     </div>

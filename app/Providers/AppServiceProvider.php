@@ -72,12 +72,7 @@ class AppServiceProvider extends ServiceProvider
                 return Product::query()
                     ->where('is_published', true)
                     ->where('visibility_status', 'active')
-                    ->where(function ($q) {
-                        $q->whereNull('available_from')->orWhere('available_from', '<=', now());
-                    })
-                    ->where(function ($q) {
-                        $q->whereNull('available_until')->orWhere('available_until', '>=', now());
-                    })
+
                     ->orderBy('position')
                     ->orderBy('name')
                     ->get(['id', 'name', 'slug']);

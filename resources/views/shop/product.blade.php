@@ -139,20 +139,29 @@
           </div>
         @endif
 
-        {{-- Verfügbarkeit --}}
-        @php $purchasable = $product->isPurchasable(); @endphp
-        @unless($purchasable)
-          <div class="mt-4 flex items-start gap-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
-            <x-heroicon-o-exclamation-triangle class="mt-0.5 h-5 w-5 shrink-0" />
-            <div>
-              @if($product->available_from && $product->available_from->gt(now()))
-                Dieser Artikel ist <strong>ab {{ $product->available_from->translatedFormat('d.m.Y') }}</strong> verfügbar.
-              @else
-                Dieser Artikel ist derzeit nicht verfügbar.
-              @endif
-            </div>
-          </div>
-        @endunless
+     {{-- Verfügbarkeit --}}
+    @php $purchasable = $product->isPurchasable(); @endphp
+    @unless($purchasable)
+    <div class="mt-4 flex items-start gap-2 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+        <x-heroicon-o-exclamation-triangle class="mt-0.5 h-5 w-5 shrink-0" />
+        <div>
+        @php
+            $from = $product->available_from;
+            $until = $product->available_until;
+            $fmt = fn($d) => optional($d)?->translatedFormat('d.m.Y');
+        @endphp
+
+        @if ($from && $until)
+            Verfügbar <strong>vom {{ $fmt($from) }} bis {{ $fmt($until) }}</strong>.
+        @elseif ($from)
+            Verfügbar <strong>ab {{ $fmt($from) }}</strong>.
+        @else
+            Dieser Artikel ist derzeit nicht verfügbar.
+        @endif
+        </div>
+    </div>
+    @endunless
+
 
         {{-- ADD TO CART --}}
         <form action="{{ route('cart.add') }}" method="post" class="mt-6">
@@ -169,68 +178,69 @@
                 </label>
 
                 @switch($opt->type)
-                  @case('select')
+                @case('select')
                     <select name="options[{{ $opt->id }}]"
                             class="block w-full rounded-md border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900"
                             @if($opt->is_required) required @endif>
-                      <option value="">— bitte wählen —</option>
-                      @foreach($opt->activeValues as $val)
+                    <option value="">— bitte wählen —</option>
+                    @foreach($opt->activeValues as $val)
                         <option value="{{ $val->id }}" @selected(old($field) == $val->id)>
-                          {{ $val->value }}
-                          @if((float)$val->price_delta !== 0)
-                            ({{ number_format($val->price_delta, 2, ',', '.') }} €)
-                          @endif
+                        {{ $val->value }}
+                        @if($val->price_delta && (float)$val->price_delta > 0)
+                            (+{{ number_format($val->price_delta, 2, ',', '.') }} €)
+                        @endif
                         </option>
-                      @endforeach
+                    @endforeach
                     </select>
                     @break
 
-                  @case('radio')
+                @case('radio')
                     <div class="space-y-2">
-                      @foreach($opt->activeValues as $val)
+                    @foreach($opt->activeValues as $val)
                         <label class="flex items-center gap-2 text-sm text-gray-800">
-                          <input type="radio" name="options[{{ $opt->id }}]" value="{{ $val->id }}"
-                                 class="h-4 w-4 border-gray-300 text-gray-900 focus:ring-gray-900"
-                                 @checked(old($field) == $val->id)
-                                 @if($opt->is_required) required @endif>
-                          <span>
+                        <input type="radio" name="options[{{ $opt->id }}]" value="{{ $val->id }}"
+                                class="h-4 w-4 border-gray-300 text-gray-900 focus:ring-gray-900"
+                                @checked(old($field) == $val->id)
+                                @if($opt->is_required) required @endif>
+                        <span>
                             {{ $val->value }}
-                            @if((float)$val->price_delta !== 0)
-                              ({{ number_format($val->price_delta, 2, ',', '.') }} €)
+                            @if($val->price_delta && (float)$val->price_delta > 0)
+                            (+{{ number_format($val->price_delta, 2, ',', '.') }} €)
                             @endif
-                          </span>
+                        </span>
                         </label>
-                      @endforeach
+                    @endforeach
                     </div>
                     @break
 
-                  @case('multi')
+                @case('multi')
                     @php $oldVals = collect(old($field, []))->map(fn($v)=>(int)$v)->all(); @endphp
                     <div class="space-y-2">
-                      @foreach($opt->activeValues as $val)
+                    @foreach($opt->activeValues as $val)
                         <label class="flex items-center gap-2 text-sm text-gray-800">
-                          <input type="checkbox" name="options[{{ $opt->id }}][]" value="{{ $val->id }}"
-                                 class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-                                 @checked(in_array($val->id, $oldVals, true))>
-                          <span>
+                        <input type="checkbox" name="options[{{ $opt->id }}][]" value="{{ $val->id }}"
+                                class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                                @checked(in_array($val->id, $oldVals, true))>
+                        <span>
                             {{ $val->value }}
-                            @if((float)$val->price_delta !== 0)
-                              ({{ number_format($val->price_delta, 2, ',', '.') }} €)
+                            @if($val->price_delta && (float)$val->price_delta > 0)
+                            (+{{ number_format($val->price_delta, 2, ',', '.') }} €)
                             @endif
-                          </span>
+                        </span>
                         </label>
-                      @endforeach
+                    @endforeach
                     </div>
                     @break
 
-                  @case('text')
+                @case('text')
                     <input type="text" name="options[{{ $opt->id }}]"
-                           value="{{ old($field) }}"
-                           class="block w-full rounded-md border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900"
-                           @if($opt->is_required) required @endif
-                           placeholder="Bitte angeben">
+                        value="{{ old($field) }}"
+                        class="block w-full rounded-md border-gray-300 text-sm focus:border-gray-900 focus:ring-gray-900"
+                        @if($opt->is_required) required @endif
+                        placeholder="Bitte angeben">
                     @break
                 @endswitch
+
               </div>
             @endforeach
           </div>
@@ -257,8 +267,7 @@
             </div>
 
             <button
-              class="inline-flex items-center rounded-md bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-              {{ $purchasable ? '' : 'disabled' }}>
+              class="inline-flex items-center rounded-md bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50">
               In den Warenkorb
             </button>
           </div>

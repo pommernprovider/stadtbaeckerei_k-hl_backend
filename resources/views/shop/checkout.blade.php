@@ -303,22 +303,99 @@
       }
     }
 
-    async function loadMeta() {
-      const b = branch.value;
-      if (!b) { showEl(hoursBox, false); showEl(leadHint, false); return; }
+async function loadMeta() {
+  const b = branch.value;
+  if (!b) { showEl(hoursBox, false); showEl(leadHint, false); return; }
 
-      try {
-        const resp = await fetch('{{ route('cart.pickup.meta') }}', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-          body: JSON.stringify({ branch_id: b })
-        });
-        if (!resp.ok) return;
-        const data = await resp.json();
-        renderOpeningHours(data.opening_hours);
-        setEarliestDate(data.earliest_date, data.lead_days);
-      } catch { /* non-critical */ }
+  try {
+    const resp = await fetch('{{ route('cart.pickup.meta') }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+      body: JSON.stringify({ branch_id: b })
+    });
+    if (!resp.ok) return;
+
+    const data = await resp.json();
+
+    const fmt = (iso) => {
+      if (!iso) return null;
+      const [y,m,d] = iso.split('-').map(Number);
+      return `${String(d).padStart(2,'0')}.${String(m).padStart(2,'0')}.${y}`;
+    };
+
+    renderOpeningHours(data.opening_hours);
+
+    // Reset Hinweis & Alert
+    if (leadHint && leadMsg) { leadMsg.textContent = ''; showEl(leadHint, false); }
+    hideAlert();
+
+    // Immer min (Lead-Time) setzen
+    setEarliestDate(data.earliest_date, null);
+
+    if (data.enforce) {
+      // Optionales max (Schnittmenge)
+      if (data.latest_date) {
+        date.max = data.latest_date;
+      } else {
+        date.removeAttribute('max');
+      }
+
+      // Fixer Tag?
+      if (data.fixed_date) {
+        date.min = data.fixed_date;
+        date.max = data.fixed_date;
+        if (!date.value || date.value !== data.fixed_date) {
+          date.value = data.fixed_date;
+        }
+        if (leadHint && leadMsg) {
+          leadMsg.textContent = `Abholung ausschließlich am ${new Date(data.fixed_date+'T00:00:00').toLocaleDateString()}.`;
+          showEl(leadHint, true);
+        }
+      } else {
+        // Korrigiere value, falls außerhalb [min, max]
+        const minV = date.min || null;
+        const maxV = date.max || null;
+        if (date.value && minV && date.value < minV) date.value = minV;
+        if (date.value && maxV && date.value > maxV) date.value = maxV;
+      }
+
+      if (data.no_feasible) {
+        showAlert('Die gewählten Artikel haben keine gemeinsame Verfügbarkeit. Bitte Warenkorb anpassen.');
+      }
+    } else {
+      // Gemischt: nur Lead-Time-Minimum, KEIN max
+      date.removeAttribute('max');
+
+      // Falls aktuelles value < min → nachziehen
+      if (date.value && date.min && date.value < date.min) {
+        date.value = date.min;
+      }
+
+      // Lesbarer Hinweis
+      const parts = (data.constrained || [])
+        .map(c => {
+          const n = c.name || 'Artikel';
+          const from = fmt(c.from);
+          const until = fmt(c.until);
+          if (from && until && from === until)  return `„${n}“ nur am ${from}`;
+          if (from && until)                    return `„${n}“ vom ${from} bis ${until}`;
+          if (from)                             return `„${n}“ ab ${from}`;
+          if (until)                            return `„${n}“ bis ${until}`;
+          return null;
+        })
+        .filter(Boolean);
+
+      if (parts.length) {
+        const text = (parts.length === 1)
+          ? `Hinweis: Für diesen Artikel gilt eine feste Verfügbarkeit: ${parts[0]}.`
+          : `Hinweis: Für einige Artikel gelten feste Verfügbarkeiten: ${parts.join(' · ')}.`;
+        if (leadHint && leadMsg) { leadMsg.textContent = text; showEl(leadHint, true); }
+      }
     }
+  } catch {
+    // non-critical
+  }
+}
 
     async function loadSlots() {
       const currentId = ++requestId;

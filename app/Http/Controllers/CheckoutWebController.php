@@ -103,6 +103,7 @@ class CheckoutWebController extends Controller
             );
         });
 
+
         // 4) Slot serverseitig prüfen
         try {
             $this->windows->assertWindowSelectable($branch, $windowStart, $items);

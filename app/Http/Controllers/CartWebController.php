@@ -93,13 +93,10 @@ class CartWebController extends Controller
             ->findOrFail((int)$r->input('product_id'));
 
         // 1) Verfügbarkeit serverseitig absichern
-        if (! $product->isPurchasable()) {
-            return back()->withErrors([
-                'product' => $product->available_from && $product->available_from->gt(now())
-                    ? 'Dieser Artikel ist erst ab ' . $product->available_from->translatedFormat('d.m.Y') . ' verfügbar.'
-                    : 'Dieser Artikel ist derzeit nicht verfügbar.'
-            ])->withInput();
+        if (! $product->is_published || $product->visibility_status === 'unavailable') {
+            return back()->withErrors(['product' => 'Dieser Artikel ist derzeit nicht bestellbar.'])->withInput();
         }
+
 
         // 2) Eingaben validieren (wie gehabt, dynamisch nach Optionen)
         $qty = max(1, (int) $r->input('qty', 1));
@@ -196,6 +193,11 @@ class CartWebController extends Controller
             ];
         }
 
+        $window = [
+            'from'  => optional($product->available_from)->toDateString(),
+            'until' => optional($product->available_until)->toDateString(),
+        ];
+
         // 4) Warenkorb aktualisieren
         $cart = session('cart_web', ['items' => []]);
 
@@ -204,7 +206,10 @@ class CartWebController extends Controller
             'qty'        => $qty,
             'unit_price' => (float)$product->base_price + $priceDeltaTotal, // Basis + Δ der Auswahl
             'options'    => $optionSnapshots,
-            // KEIN 'extra_lead' mehr – Lead wird später tagebasiert aus DB gerechnet
+            'meta'       => [
+                'date_min' => $window['from'],
+                'date_max' => $window['until'],
+            ],
         ];
 
         session(['cart_web' => $cart]);
@@ -260,53 +265,84 @@ class CartWebController extends Controller
         ]);
 
         $branch = Branch::findOrFail($data['branch_id']);
+        $cart   = session('cart_web', ['items' => []]);
 
-        // Warenkorb aus Session wie in CheckoutWebController@show()
-        $cart = session('cart_web', ['items' => []]);
-
-        // Cart → DTOs (nur das, was LeadTimeService braucht)
-        $items = collect($cart['items'])->map(function ($row) {
-            $optionValueIds = collect($row['options'] ?? [])->pluck('value_id')->filter()->values()->all();
-            $freeTextByOptionId = collect($row['options'] ?? [])
+        // DTOs für Lead-Time-Rechner
+        $itemsDto = collect($cart['items'])->map(fn($row) => new CartItemSelection(
+            productId: (int) $row['product_id'],
+            quantity: (int) $row['qty'],
+            variantId: null,
+            optionValueIds: collect($row['options'] ?? [])->pluck('value_id')->filter()->values()->all(),
+            freeTextByOptionId: collect($row['options'] ?? [])
                 ->filter(fn($o) => !empty($o['free_text']) && !empty($o['option_id']))
                 ->mapWithKeys(fn($o) => [$o['option_id'] => (string) $o['free_text']])
-                ->all();
+                ->all(),
+        ));
 
-            return new CartItemSelection(
-                productId: (int) $row['product_id'],
-                quantity: (int) $row['qty'],
-                variantId: null,
-                optionValueIds: $optionValueIds,
-                freeTextByOptionId: $freeTextByOptionId,
-            );
-        });
+        $today    = CarbonImmutable::today();
+        $lines    = collect($cart['items']);
+        $mins     = $lines->pluck('meta.date_min')->filter(); // nicht-null
+        $maxs     = $lines->pluck('meta.date_max')->filter();
 
-        // Tagebasierte Lead-Zeit
-        $leadDays = $lead->forCartDays($items, $branch);
-        $today = CarbonImmutable::today();
-        $earliestDate = $today->addDays($leadDays)->toDateString();
+        $hasAnyConstraint   = $mins->isNotEmpty() || $maxs->isNotEmpty();
+        $constrainedLines   = $lines->filter(fn($l) => !empty($l['meta']['date_min']) || !empty($l['meta']['date_max']));
+        $hasUnconstrained   = $lines->count() > $constrainedLines->count();
+        $enforce            = $hasAnyConstraint && !$hasUnconstrained;   // <- nur wenn alle constrained
 
-        // Öffnungszeiten (Wochensicht)
+        // Lead-Time:
+        // - enforce=true  -> über alle Items
+        // - enforce=false -> nur über unbeschränkte Items
+        if ($enforce) {
+            $leadDays = $lead->forCartDays($itemsDto, $branch);
+        } else {
+            $unconstrainedDtos = $itemsDto->filter(function ($dto) {
+                $p = Product::find($dto->productId);
+                return $p && is_null($p->available_from) && is_null($p->available_until);
+            })->values();
+            $leadDays = $unconstrainedDtos->isNotEmpty() ? $lead->forCartDays($unconstrainedDtos, $branch) : 0;
+        }
+
+        $earliest = $today->addDays($leadDays)->toDateString();
+
+        // Schnittmenge/Spannen nur anwenden, wenn enforce=true
+        $cartMin = $mins->isNotEmpty() ? $mins->max() : null; // spätester from
+        $cartMax = $maxs->isNotEmpty() ? $maxs->min() : null; // frühestes until
+
+        if ($enforce) {
+            // frühestes Datum mindestens cartMin
+            if ($earliest && $cartMin && $earliest < $cartMin) {
+                $earliest = $cartMin;
+            }
+        }
+
+        $latest     = $enforce ? $cartMax : null;
+        $fixed      = $enforce && $cartMin && $cartMax && $cartMin === $cartMax;
+        $noFeasible = $enforce && $cartMax && $earliest > $cartMax;
+
         $hours = BranchOpeningHour::query()
             ->where('branch_id', $branch->id)
             ->orderBy('weekday')
-            ->get()
-            ->map(function ($h) {
+            ->get(['weekday', 'is_closed', 'opens_at', 'closes_at']);
+
+        $constrainedProducts = $constrainedLines
+            ->map(function ($l) {
+                $p = Product::find($l['product_id']);
                 return [
-                    'weekday'   => (int) $h->weekday,  // 0=So..6=Sa
-                    'is_closed' => (bool) $h->is_closed,
-                    'opens_at'  => $h->opens_at,
-                    'closes_at' => $h->closes_at,
+                    'name'  => $p?->name ?? 'Artikel',
+                    'from'  => $l['meta']['date_min'] ?? null,
+                    'until' => $l['meta']['date_max'] ?? null,
                 ];
-            })
-            ->values()
-            ->all();
+            })->values();
 
         return response()->json([
-            'lead_days'      => $leadDays,
-            'earliest_date'  => $earliestDate,     // YYYY-MM-DD
-            'opening_hours'  => $hours,            // für kompakte Anzeige
-            'today'          => $today->toDateString(),
+            'lead_days'     => $leadDays,
+            'earliest_date' => $earliest,          // YYYY-MM-DD
+            'latest_date'   => $latest,            // YYYY-MM-DD|null
+            'fixed_date'    => $fixed ? $earliest : null,
+            'enforce'       => $enforce,           // true=enforce, false=warn only
+            'no_feasible'   => $noFeasible,
+            'opening_hours' => $hours,
+            'constrained'   => $constrainedProducts,
         ]);
     }
 }

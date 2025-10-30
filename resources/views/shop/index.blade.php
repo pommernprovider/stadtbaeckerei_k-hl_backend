@@ -59,46 +59,9 @@
     </section>
 
     {{-- Empfohlene Produkte --}}
-    <section class="bg-white py-12 xl:py-24">
-        <div class="mx-auto container px-4 sm:px-6 lg:px-8 pb-12">
-            <div class="flex items-end justify-between mb-12 xl:mb-24">
-                <h2 class="text-3xl text-center mx-auto font-semibold">Empfohlene Produkte</h2>
-            </div>
-
-            @if(($featured ?? collect())->isEmpty())
-                <div class="mt-6 rounded-lg border border-gray-200 p-6 text-center text-gray-600">
-                    Aktuell keine Empfehlungen.
-                </div>
-            @else
-                <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    @foreach($featured as $p)
-                        @php
-                            $img = $p->getFirstMediaUrl('product_main', 'web')
-                                ?: $p->getFirstMediaUrl('product_main')
-                                ?: 'https://via.placeholder.com/800x600';
-                          @endphp
-
-                        <div class="group">
-                            {{-- Bild (alleiniger „Card“-Look) --}}
-                            <a href="{{ route('shop.product', $p) }}" class="block overflow-hidden rounded-xl bg-gray-100">
-                                <div class="aspect-4/3 w-full">
-                                    <img src="{{ $img }}" alt="{{ $p->name }}" loading="lazy" decoding="async"
-                                        class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]">
-                                </div>
-                            </a>
-
-                            {{-- Text unter dem Bild (ohne Preis) --}}
-                            <h3 class="mt-3 text-center text-lg font-medium text-gray-900 line-clamp-2">
-                                <a href="{{ route('shop.product', $p) }}" class="hover:underline">
-                                    {{ $p->name }}
-                                </a>
-                            </h3>
-                        </div>
-                    @endforeach
-                </div>
-            @endif
-
-        </div>
-    </section>
+    @include('shop.related-product', [
+        'title' => 'Empfohlene Produkte',
+        'products' => $featured ?? collect(),
+    ])
 
 @endsection

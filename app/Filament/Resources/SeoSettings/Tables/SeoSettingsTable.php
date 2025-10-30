@@ -15,6 +15,7 @@ class SeoSettingsTable
         return $table
             ->columns([
                 TextColumn::make('default_meta_title')
+                    ->label('Meta Daten')
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()

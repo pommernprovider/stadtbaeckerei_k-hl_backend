@@ -81,8 +81,7 @@ class Product extends Model implements HasMedia
     {
         $q->publishedForCatalog()
             ->where(function ($qq) {
-                $qq->whereNull('available_from')
-                    ->orWhere('available_from', '<=', now());
+                $qq->where('visibility_status', ['active', 'seasonal']);
             });
     }
 

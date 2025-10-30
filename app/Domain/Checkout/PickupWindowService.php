@@ -26,7 +26,7 @@ class PickupWindowService
             ? CarbonImmutable::instance($date)->startOfDay()
             : CarbonImmutable::parse($date)->startOfDay();
 
-        $today = CarbonImmutable::today();
+        $today   = CarbonImmutable::today();
         $weekday = (int) $day->dayOfWeek; // 0=So
 
         // Vergangenheit sperren
@@ -34,10 +34,57 @@ class PickupWindowService
             return [];
         }
 
-        // Lead-Time (in TAGEN) → frühestes Datum
-        $leadDays = $this->leadTime->forCartDays($cartItems, $branch);
-        $earliestDate = $today->addDays($leadDays)->startOfDay();
+        // --- NEU: Verfügbarkeitsfenster & Enforce-Logik ---
+        $mins = [];
+        $maxs = [];
+        $hasUnconstrained = false;
 
+        foreach ($cartItems as $it) {
+            $p = \App\Models\Product::find($it->productId);
+            if (! $p) continue;
+
+            $from  = optional($p->available_from)->toDateString();
+            $until = optional($p->available_until)->toDateString();
+
+            if ($from)  $mins[] = $from;
+            if ($until) $maxs[] = $until;
+
+            if (! $from && ! $until) {
+                $hasUnconstrained = true; // es gibt mind. einen „freien“ Artikel
+            }
+        }
+
+        $hasAnyConstraint = !empty($mins) || !empty($maxs);
+        $enforce = $hasAnyConstraint && ! $hasUnconstrained;
+
+        // Schnittmenge nur anwenden, wenn enforce = true
+        if ($enforce) {
+            $cartMin = !empty($mins) ? max($mins) : null; // spätester from
+            $cartMax = !empty($maxs) ? min($maxs) : null; // frühestes until
+            $dayIso  = $day->toDateString();
+
+            if ($cartMin && $dayIso < $cartMin) return [];
+            if ($cartMax && $dayIso > $cartMax) return [];
+        }
+
+        // --- NEU: Lead-Time effektiv bestimmen ---
+        if ($enforce) {
+            // nur von-bis-Artikel im Korb -> Lead-Time über alle
+            $leadDays = $this->leadTime->forCartDays($cartItems, $branch);
+        } else {
+            // gemischter Korb -> Lead-Time nur über unbeschränkte Artikel
+            $unconstrained = $cartItems->filter(function ($it) {
+                $p = \App\Models\Product::find($it->productId);
+                return $p && is_null($p->available_from) && is_null($p->available_until);
+            })->values();
+
+            $leadDays = $unconstrained->isNotEmpty()
+                ? $this->leadTime->forCartDays($unconstrained, $branch)
+                : 0;
+        }
+
+        // Frühestes Datum durch Lead-Time
+        $earliestDate = $today->addDays($leadDays)->startOfDay();
         if ($day->lt($earliestDate)) {
             return [];
         }
@@ -123,6 +170,7 @@ class PickupWindowService
 
         return $out;
     }
+
 
     public function assertWindowSelectable(Branch $branch, DateTimeInterface|string $windowStart, Collection $cartItems): void
     {

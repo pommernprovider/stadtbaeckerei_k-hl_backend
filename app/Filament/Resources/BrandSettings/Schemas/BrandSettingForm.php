@@ -16,8 +16,8 @@ class BrandSettingForm
             ->components([
                 Section::make('Allgemein')->schema([
                     TextInput::make('site_name')->label('Seitename'),
-                    TextInput::make('contact_email')->email(),
-                    TextInput::make('contact_phone'),
+                    TextInput::make('contact_email')->label('Kontakt Mail')->email(),
+                    TextInput::make('contact_phone')->label('Telefonnummer'),
                     // KeyValue::make('social_links')->keyLabel('Plattform')->valueLabel('URL')->reorderable(),
                 ])->columns(1),
 
